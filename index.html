@@ -35,7 +35,8 @@
     var element, container;
 
     var pointcloud;
-    var pointcloudPath = "./resources/pointclouds/lion_takanawa/cloud.js";
+    //var pointcloudPath = "./resources/pointclouds/lion_takanawa/cloud.js";
+    var pointcloudPath = "./resources/pointclouds/street/cloud.js";
 
     var clock = new THREE.Clock();
 
@@ -53,15 +54,15 @@
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
-      camera.position.set(5, 2, 5);
+      camera.position.set(-55, -56, 20);
       scene.add(camera);
 
       controls = new THREE.OrbitControls(camera, element);
       controls.rotateUp(Math.PI / 4);
 //      controls.target.set(
-//        camera.position.x + 0.1,
+//        camera.position.x,
 //        camera.position.y,
-//        camera.position.z
+//        camera.position.z + 0.1
 //      );
       controls.target.set(
               0.0,
@@ -119,8 +120,9 @@
       Potree.POCLoader.load(pointcloudPath, function(geometry){
 
         pointcloud = new Potree.PointCloudOctree(geometry);
-        pointcloud.material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+        pointcloud.material.pointSizeType = Potree.PointSizeType.FIXED;
         pointcloud.material.size = 1;
+        //pointcloud.material.color = Potree.PointColorType.COLOR.RGB
 
         referenceFrame.add(pointcloud);
 
@@ -129,9 +131,15 @@
         var sg = pointcloud.boundingSphere.clone().applyMatrix4(pointcloud.matrixWorld);
         referenceFrame.position.copy(sg.center).multiplyScalar(-1);
         referenceFrame.updateMatrixWorld(true);
+//        referenceFrame.applyMatrix(new THREE.Matrix4().set(
+//                1,0,0,0,
+//                0,0,1,2.2,
+//                0,-1,0,0,
+//                0,0,0,1
+//        ));
         referenceFrame.applyMatrix(new THREE.Matrix4().set(
                 1,0,0,0,
-                0,0,1,2.2,
+                0,0,1,-24,
                 0,-1,0,0,
                 0,0,0,1
         ));
