@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Cardboard Example</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<head>
+    <title>Potree-Cardboard</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
-      body {
-        margin: 0px;
-        overflow: hidden;
-      }
-      #example {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-      }
+        body {
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
     </style>
-  </head>
-  <body>
-    <div id="example"></div>
+</head>
+<body>
+<div id="container"></div>
 
-  <script src="js/third-party/threejs/three.js"></script>
-  <script src="js/third-party/threejs/StereoEffect.js"></script>
-  <script src="js/third-party/threejs/DeviceOrientationControls.js"></script>
-  <script src="js/third-party/threejs/OrbitControls.js"></script>
+<script src="js/third-party/threejs/three.js"></script>
+<script src="js/third-party/threejs/StereoEffect.js"></script>
+<script src="js/third-party/threejs/DeviceOrientationControls.js"></script>
+<script src="js/third-party/threejs/OrbitControls.js"></script>
 
-  <script src="js/third-party/potree.js"></script>
-  <script src="js/third-party/BinaryHeap.js"></script>
+<script src="js/third-party/potree.js"></script>
+<script src="js/third-party/BinaryHeap.js"></script>
 
-  <script>
+<script>
     var camera, scene, renderer;
     var effect, controls;
     var element, container;
 
     var pointcloud;
-    //var pointcloudPath = "./resources/pointclouds/lion_takanawa/cloud.js";
     var pointcloudPath = "./resources/pointclouds/street/cloud.js";
 
     var clock = new THREE.Clock();
@@ -43,158 +43,153 @@
     init();
     animate();
 
+    // ********************* functions definition ********************* //
     function init() {
-      renderer = new THREE.WebGLRenderer();
-      element = renderer.domElement;
-      container = document.getElementById('example');
-      container.appendChild(element);
+        renderer = new THREE.WebGLRenderer();
+        element = renderer.domElement;
+        container = document.getElementById('container');
+        container.appendChild(element);
 
-      effect = new THREE.StereoEffect(renderer);
+        effect = new THREE.StereoEffect(renderer);
 
-      scene = new THREE.Scene();
+        scene = new THREE.Scene();
 
-      camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
-      camera.position.set(-55, -56, 20);
-      scene.add(camera);
+        camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
+        camera.position.set(-55, -56, 20);
+        scene.add(camera);
 
-      controls = new THREE.OrbitControls(camera, element);
-      controls.rotateUp(Math.PI / 4);
-//      controls.target.set(
-//        camera.position.x,
-//        camera.position.y,
-//        camera.position.z + 0.1
-//      );
-      controls.target.set(
-              0.0,
-              0.0,
-              0.0
-      );
-      controls.noZoom = true;
-      controls.noPan = true;
+        controls = new THREE.OrbitControls(camera, element);
+        controls.rotateUp(Math.PI / 4);
 
-      function setOrientationControls(e) {
-        if (!e.alpha) {
-          return;
+        controls.target.set(
+                0.0,
+                0.0,
+                0.0
+        );
+
+        controls.noZoom = true;
+        controls.noPan = true;
+
+        function setOrientationControls(e) {
+            if (!e.alpha) {
+                return;
+            }
+
+            controls = new THREE.DeviceOrientationControls(camera, true);
+            controls.connect();
+            controls.update();
+
+            element.addEventListener('click', fullscreen, false);
+
+            window.removeEventListener('deviceorientation', setOrientationControls, true);
         }
 
-        controls = new THREE.DeviceOrientationControls(camera, true);
-        controls.connect();
-        controls.update();
-
-        element.addEventListener('click', fullscreen, false);
-
-        window.removeEventListener('deviceorientation', setOrientationControls, true);
-      }
-      window.addEventListener('deviceorientation', setOrientationControls, true);
+        window.addEventListener('deviceorientation', setOrientationControls, true);
 
 
-      var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
-      scene.add(light);
+        var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
+        scene.add(light);
 
-      var texture = THREE.ImageUtils.loadTexture(
-        'resources/textures/patterns/checker.png'
-      );
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat = new THREE.Vector2(50, 50);
-      texture.anisotropy = renderer.getMaxAnisotropy();
+        var texture = THREE.ImageUtils.loadTexture(
+                'resources/textures/patterns/checker.png'
+        );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat = new THREE.Vector2(50, 50);
+        texture.anisotropy = renderer.getMaxAnisotropy();
 
-      var material = new THREE.MeshPhongMaterial({
-        color: 0xffffff,
-        specular: 0xffffff,
-        shininess: 20,
-        shading: THREE.FlatShading,
-        map: texture
-      });
+        var material = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            specular: 0xffffff,
+            shininess: 20,
+            shading: THREE.FlatShading,
+            map: texture
+        });
 
-      var geometry = new THREE.PlaneGeometry(1000, 1000);
+        var geometry = new THREE.PlaneGeometry(1000, 1000);
 
-      var mesh = new THREE.Mesh(geometry, material);
-      mesh.rotation.x = -Math.PI / 2;
-      scene.add(mesh);
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 2;
+        scene.add(mesh);
 
-      // load point cloud
-      referenceFrame = new THREE.Object3D();
-      scene.add(referenceFrame);
+        // load point cloud
+        referenceFrame = new THREE.Object3D();
+        scene.add(referenceFrame);
 
-      Potree.POCLoader.load(pointcloudPath, function(geometry){
+        Potree.POCLoader.load(pointcloudPath, function (geometry) {
 
-        pointcloud = new Potree.PointCloudOctree(geometry);
-        pointcloud.material.pointSizeType = Potree.PointSizeType.FIXED;
-        pointcloud.material.size = 1;
-        //pointcloud.material.color = Potree.PointColorType.COLOR.RGB
+            pointcloud = new Potree.PointCloudOctree(geometry);
+            pointcloud.material.pointSizeType = Potree.PointSizeType.FIXED;
+            pointcloud.material.size = 1;
+            //pointcloud.material.color = Potree.PointColorType.COLOR.RGB
 
-        referenceFrame.add(pointcloud);
+            referenceFrame.add(pointcloud);
 
-        // move point cloud to origin and flip y and z axis
-        referenceFrame.updateMatrixWorld(true);
-        var sg = pointcloud.boundingSphere.clone().applyMatrix4(pointcloud.matrixWorld);
-        referenceFrame.position.copy(sg.center).multiplyScalar(-1);
-        referenceFrame.updateMatrixWorld(true);
-//        referenceFrame.applyMatrix(new THREE.Matrix4().set(
-//                1,0,0,0,
-//                0,0,1,2.2,
-//                0,-1,0,0,
-//                0,0,0,1
-//        ));
-        referenceFrame.applyMatrix(new THREE.Matrix4().set(
-                1,0,0,0,
-                0,0,1,-24,
-                0,-1,0,0,
-                0,0,0,1
-        ));
+            // move point cloud to origin and flip y and z axis
+            referenceFrame.updateMatrixWorld(true);
+            var sg = pointcloud.boundingSphere.clone().applyMatrix4(pointcloud.matrixWorld);
+            referenceFrame.position.copy(sg.center).multiplyScalar(-1);
+            referenceFrame.updateMatrixWorld(true);
 
-      });
+            referenceFrame.applyMatrix(new THREE.Matrix4().set(
+                    1, 0, 0, 0,
+                    0, 0, 1, -24,
+                    0, -1, 0, 0,
+                    0, 0, 0, 1
+            ));
 
-      window.addEventListener('resize', resize, false);
-      setTimeout(resize, 1);
+        });
+
+        window.addEventListener('resize', resize, false);
+        setTimeout(resize, 1);
     }
 
     function resize() {
-      var width = container.offsetWidth;
-      var height = container.offsetHeight;
+        var width = container.offsetWidth;
+        var height = container.offsetHeight;
 
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
 
-      renderer.setSize(width, height);
-      effect.setSize(width, height);
+        renderer.setSize(width, height);
+        effect.setSize(width, height);
     }
 
     function update(dt) {
-      resize();
+        resize();
 
-      camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-      if(pointcloud){
-        pointcloud.update(camera, renderer);
-      }
+        if (pointcloud) {
+            pointcloud.update(camera, renderer);
+        }
 
-      controls.update(dt);
+        controls.update(dt);
     }
 
     function render(dt) {
-      effect.render(scene, camera);
+        effect.render(scene, camera);
     }
 
     function animate(t) {
-      requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
 
-      update(clock.getDelta());
-      render(clock.getDelta());
+        update(clock.getDelta());
+        render(clock.getDelta());
     }
 
     function fullscreen() {
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      } else if (container.msRequestFullscreen) {
-        container.msRequestFullscreen();
-      } else if (container.mozRequestFullScreen) {
-        container.mozRequestFullScreen();
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      }
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.msRequestFullscreen) {
+            container.msRequestFullscreen();
+        } else if (container.mozRequestFullScreen) {
+            container.mozRequestFullScreen();
+        } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen();
+        }
     }
-  </script>
-  </body>
+    // ********************* functions definition end ********************* //
+</script>
+</body>
 </html>
