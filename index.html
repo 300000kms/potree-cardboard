@@ -21,6 +21,7 @@
 </head>
 <body>
 <div id="container"></div>
+<div id="DebugMessage" style="position: absolute; left: 10px; bottom: 10px; width: 800px; color:white"></div>
 
 <script src="js/third-party/threejs/three.js"></script>
 <script src="js/third-party/threejs/StereoEffect.js"></script>
@@ -39,6 +40,9 @@
     var pointcloudPath = "./resources/pointclouds/street/cloud.js";
 
     var clock = new THREE.Clock();
+
+    var lastCameraRotation;
+    var degreePerRadian = 180/3.1415926;
 
     init();
     animate();
@@ -69,6 +73,8 @@
 
         controls.noZoom = true;
         controls.noPan = true;
+        controls.noKeys = true;
+        controls.noRotate = true;
 
         function setOrientationControls(e) {
             if (!e.alpha) {
@@ -121,7 +127,6 @@
             pointcloud = new Potree.PointCloudOctree(geometry);
             pointcloud.material.pointSizeType = Potree.PointSizeType.FIXED;
             pointcloud.material.size = 1;
-            //pointcloud.material.color = Potree.PointColorType.COLOR.RGB
 
             referenceFrame.add(pointcloud);
 
@@ -142,6 +147,8 @@
 
         window.addEventListener('resize', resize, false);
         setTimeout(resize, 1);
+
+        lastCameraRotation = camera.rotation.clone();
     }
 
     function resize() {
@@ -168,7 +175,25 @@
     }
 
     function render(dt) {
-        effect.render(scene, camera);
+        var deltaX = camera.rotation.x - lastCameraRotation.x;
+        var deltaY = camera.rotation.y - lastCameraRotation.y;
+        var deltaZ = camera.rotation.z - lastCameraRotation.z;
+
+        document.getElementById("DebugMessage").innerHTML = "(" + Math.round(camera.rotation.x*degreePerRadian)+ ", " +
+                Math.round(camera.rotation.y*degreePerRadian) + ", " +
+                Math.round(camera.rotation.z*degreePerRadian) + ") <br>" +
+        "(" + Math.round(lastCameraRotation.x*degreePerRadian)+ ", " +
+        Math.round(lastCameraRotation.y*degreePerRadian) + ", " +
+        Math.round(lastCameraRotation.z*degreePerRadian) + ")";
+
+        // update the frame only for rotation big enough
+        var threshold = 1;
+        if ((Math.abs(deltaX*degreePerRadian) > threshold) ||
+                (Math.abs(deltaY*degreePerRadian) > threshold) ||
+                (Math.abs(deltaZ*degreePerRadian) > threshold)) {
+            effect.render(scene, camera);
+            lastCameraRotation = camera.rotation.clone();
+        }
     }
 
     function animate(t) {
